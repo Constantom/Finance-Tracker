@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Income | Finance Tracker</title>
+<link rel="stylesheet" href="assets/css/variables.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/pages.css">
+<style>
+.card{padding:25px;border-radius:12px;margin-bottom:30px;}
+.table th,.table td{padding:12px 15px;}
+.table tbody tr:not(:last-child){border-bottom:1px solid #eee;}
+.theme-btn{position:absolute;top:20px;right:20px;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;background:var(--color-accent);color:#fff;}
+.form-group{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.form-group input,.form-group select{flex:1;padding:10px;border-radius:6px;border:1px solid #ccc;}
+.form-group button{padding:10px 20px;border:none;border-radius:6px;background:var(--color-accent);color:#fff;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<button id="themeToggle" class="theme-btn">Toggle Dark / Light</button>
+
+<div class="app">
+  <aside class="sidebar">
+    <h2>Finance Tracker</h2>
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a href="income.html" class="active">Income</a>
+      <a href="expenses.html">Expenses</a>
+      <a href="categories.html">Categories</a>
+      <a href="reports.html">Reports</a>
+      <a href="settings.html">Settings</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="header"><h1>Income</h1></header>
+
+    <section class="card">
+      <form id="incomeForm" class="form-group">
+        <input type="date" id="incomeDate" required>
+        <input type="text" id="incomeDescription" placeholder="Description" required>
+        <select id="incomeCategory" required></select>
+        <input type="number" id="incomeAmount" placeholder="Amount" required>
+        <button type="submit">Add Income</button>
+      </form>
+
+      <table class="table">
+        <thead>
+          <tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th></tr>
+        </thead>
+        <tbody id="incomeTable"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="assets/js/theme.js"></script>
+<script>
+const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+if(!currentUser) window.location.href='login.html';
+
+const incomeForm = document.getElementById('incomeForm');
+const incomeTable = document.getElementById('incomeTable');
+const incomeCategory = document.getElementById('incomeCategory');
+
+/* Ensure default categories per user */
+function ensureDefaultCategories() {
+  let allUsers = JSON.parse(localStorage.getItem('users')) || [];
+  const user = allUsers.find(u => u.email === currentUser.email);
+  if(!user.categories || user.categories.length===0){
+    user.categories = ["Salary","Bonus","Investment","Other"];
+    localStorage.setItem('users', JSON.stringify(allUsers));
+  }
+}
+
+/* Populate dropdown from current user categories */
+function updateCategoryDropdowns() {
+  let allUsers = JSON.parse(localStorage.getItem('users')) || [];
+  const user = allUsers.find(u => u.email === currentUser.email);
+  incomeCategory.innerHTML = '';
+  if(!user.categories || user.categories.length===0){
+    const opt = document.createElement('option');
+    opt.textContent = 'No Categories';
+    opt.disabled = true;
+    opt.selected = true;
+    incomeCategory.appendChild(opt);
+  } else {
+    user.categories.forEach(c=>{
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      incomeCategory.appendChild(opt);
+    });
+  }
+}
+
+/* Render income table */
+function renderIncomes() {
+  const allIncomes = JSON.parse(localStorage.getItem('incomes')) || [];
+  const incomes = allIncomes.filter(t => t.userEmail === currentUser.email);
+  incomeTable.innerHTML = '';
+  incomes.forEach(t=>{
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${t.date}</td>
+      <td>${t.description}</td>
+      <td>${t.category}</td>
+      <td style="color:var(--color-accent)">+ ₦${parseFloat(t.amount).toLocaleString()}</td>
+    `;
+    incomeTable.appendChild(row);
+  });
+}
+
+/* Handle form submission */
+incomeForm.onsubmit = e=>{
+  e.preventDefault();
+  const date = document.getElementById('incomeDate').value;
+  const desc = document.getElementById('incomeDescription').value.trim();
+  const category = incomeCategory.value;
+  const amount = document.getElementById('incomeAmount').value;
+
+  const allIncomes = JSON.parse(localStorage.getItem('incomes')) || [];
+  allIncomes.push({date, description: desc, category, amount, userEmail: currentUser.email});
+  localStorage.setItem('incomes', JSON.stringify(allIncomes));
+
+  incomeForm.reset();
+  renderIncomes();
+}
+
+/* Initialize */
+ensureDefaultCategories();
+updateCategoryDropdowns();
+renderIncomes();
+</script>
+</body>
+</html>

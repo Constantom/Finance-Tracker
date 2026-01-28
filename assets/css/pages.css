@@ -1,0 +1,24 @@
+.section-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  margin-bottom: 15px;      
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+.form-grid button {
+  margin-top: 20px;         
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.card {
+  margin-bottom: 30px;
+  padding: 25px;        
+  border-radius: 12px;
+}
+

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login | Finance Tracker</title>
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <style>
+    body {
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+      background:var(--color-bg);
+      font-family:Trebuchet MS,sans-serif;
+    }
+    .auth-card {
+      background:var(--color-card);
+      padding:40px;
+      border-radius:12px;
+      box-shadow:0 8px 20px rgba(0,0,0,0.1);
+      width:360px;
+    }
+    .auth-card h2 { text-align:center; margin-bottom:20px; }
+    .auth-card input {
+      width:100%;
+      padding:10px;
+      margin:8px 0;
+      border-radius:6px;
+      border:1px solid #ccc;
+    }
+    .auth-card button {
+      width:100%;
+      padding:12px;
+      margin-top:12px;
+      border:none;
+      border-radius:6px;
+      background:var(--color-accent);
+      color:#fff;
+      font-weight:bold;
+      cursor:pointer;
+    }
+    .auth-card button:hover { opacity:0.9; }
+    .auth-card .link {
+      text-align:center;
+      margin-top:12px;
+      display:block;
+      color:var(--color-accent);
+      text-decoration:none;
+    }
+    .error { color:#ef4444; margin-top:6px; text-align:center; }
+    .theme-btn {
+      position:absolute;
+      top:20px;
+      right:20px;
+      padding:6px 12px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      background:var(--color-accent);
+      color:#fff;
+    }
+  </style>
+</head>
+<body>
+
+<button id="themeToggle" class="theme-btn">Toggle Dark / Light</button>
+
+<div class="auth-card">
+  <h2>Login</h2>
+  <form id="loginForm">
+    <input type="email" id="email" placeholder="Email Address" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+    <div class="error" id="error"></div>
+  </form>
+  <a href="register.html" class="link">Don't have an account? Register</a>
+</div>
+
+<script src="assets/js/currency.js"></script>
+<script src="assets/js/theme.js"></script>
+<script>
+  const form = document.getElementById("loginForm");
+  const errorDiv = document.getElementById("error");
+
+  form.onsubmit = e => {
+    e.preventDefault();
+    errorDiv.textContent = "";
+
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const password = btoa(document.getElementById("password").value);
+
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const user = users.find(u => u.email === email && u.password === password);
+
+    if (!user) {
+      errorDiv.textContent = "Invalid email or password!";
+      return;
+    }
+
+ 
+    const currentUser = {
+      id: user.id,
+      name: user.name,         
+      email: user.email
+    };
+
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    window.location.href = "index.html";
+  };
+</script>
+
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Reports | Finance Tracker</title>
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <style>
+    .card { padding:25px; border-radius:12px; margin-bottom:30px; }
+    .table th, .table td { padding:12px 15px; }
+    .table tbody tr:not(:last-child) { border-bottom:1px solid #eee; }
+    .theme-btn { position:absolute; top:20px; right:20px; padding:6px 12px; border:none; border-radius:6px; cursor:pointer; background:var(--color-accent); color:#fff; }
+    canvas { max-width:100%; margin-bottom:20px; }
+
+    /* Flex container for charts */
+    .charts-flex { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; align-items:flex-start; }
+    .chart-card { flex:1 1 400px; max-width:500px; }
+
+    @media(max-width:900px){
+      .chart-card { flex:1 1 100%; max-width:100%; }
+    }
+  </style>
+</head>
+<body>
+
+<button id="themeToggle" class="theme-btn">Toggle Dark / Light</button>
+
+<div class="app">
+  <aside class="sidebar">
+    <h2>Finance Tracker</h2>
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a href="income.html">Income</a>
+      <a href="expenses.html">Expenses</a>
+      <a href="categories.html">Categories</a>
+      <a href="reports.html" class="active">Reports</a>
+      <a href="settings.html">Settings</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="header"><h1>Reports</h1></header>
+
+    <section class="card charts-flex">
+      <div class="chart-card">
+        <h2 class="section-title">Income vs Expenses Trend</h2>
+        <canvas id="trendChart" height="250"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h2 class="section-title">Expenses by Category</h2>
+        <canvas id="categoryChart" height="250"></canvas>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Recent Transactions</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody id="transactionsTable"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/currency.js"></script>
+<script>
+const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+if(!currentUser) window.location.href='login.html';
+
+const trendCtx = document.getElementById('trendChart').getContext('2d');
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+const transactionsTable = document.getElementById('transactionsTable');
+
+let trendChart, categoryChart;
+
+function renderReports() {
+  // Get all incomes and expenses from localStorage
+  const allIncomes = JSON.parse(localStorage.getItem('incomes')) || [];
+  const allExpenses = JSON.parse(localStorage.getItem('expenses')) || [];
+
+  // Filter by current user
+  const incomes = allIncomes.filter(t => t.userEmail === currentUser.email);
+  const expenses = allExpenses.filter(t => t.userEmail === currentUser.email);
+
+  // Dates for trend chart
+  const allDates = [...new Set([...incomes.map(t => t.date), ...expenses.map(t => t.date)])].sort();
+
+  const incomeData = allDates.map(d => incomes.filter(t => t.date === d).reduce((sum, t) => sum + parseFloat(t.amount), 0));
+  const expenseData = allDates.map(d => expenses.filter(t => t.date === d).reduce((sum, t) => sum + parseFloat(t.amount), 0));
+
+  // Trend chart
+  if(!trendChart){
+    trendChart = new Chart(trendCtx, {
+      type:'line',
+      data:{
+        labels: allDates,
+        datasets:[
+          { label:'Income', data: incomeData, borderColor:'var(--color-accent)', backgroundColor:'rgba(0,128,128,0.1)', tension:0.3, fill:true },
+          { label:'Expenses', data: expenseData, borderColor:'var(--color-danger)', backgroundColor:'rgba(255,0,0,0.1)', tension:0.3, fill:true }
+        ]
+      },
+      options:{ responsive:true, plugins:{ legend:{position:'top'}, tooltip:{mode:'index', intersect:false} }, interaction:{ mode:'nearest', intersect:false }, scales:{ y:{ beginAtZero:true } } }
+    });
+  } else {
+    trendChart.data.labels = allDates;
+    trendChart.data.datasets[0].data = incomeData;
+    trendChart.data.datasets[1].data = expenseData;
+    trendChart.update();
+  }
+
+  // Category chart
+  const categoryTotals = {};
+  expenses.forEach(exp => { categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + parseFloat(exp.amount); });
+
+  if(!categoryChart){
+    categoryChart = new Chart(categoryCtx,{
+      type:'doughnut',
+      data:{
+        labels: Object.keys(categoryTotals).length ? Object.keys(categoryTotals) : ['No Expenses'],
+        datasets:[{
+          data: Object.values(categoryTotals).length ? Object.values(categoryTotals) : [0],
+          backgroundColor: Object.keys(categoryTotals).map((_,i)=>`hsl(${i*60},70%,60%)`)
+        }]
+      },
+      options:{ responsive:true, plugins:{ legend:{position:'bottom'} } }
+    });
+  } else {
+    categoryChart.data.labels = Object.keys(categoryTotals).length ? Object.keys(categoryTotals) : ['No Expenses'];
+    categoryChart.data.datasets[0].data = Object.values(categoryTotals).length ? Object.values(categoryTotals) : [0];
+    categoryChart.data.datasets[0].backgroundColor = Object.keys(categoryTotals).map((_,i)=>`hsl(${i*60},70%,60%)`);
+    categoryChart.update();
+  }
+
+  // Transactions table
+  const allTransactions = [
+    ...incomes.map(t => ({...t,type:'income'})),
+    ...expenses.map(t => ({...t,type:'expense'}))
+  ].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  transactionsTable.innerHTML = '';
+  allTransactions.forEach(t => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${t.date}</td>
+      <td>${t.description}</td>
+      <td>${t.category}</td>
+      <td style="color:${t.type==='income'?'var(--color-accent)':'var(--color-danger)'}">
+        ${t.type==='income'?'+':'-'} ₦${parseFloat(t.amount).toLocaleString()}
+      </td>
+    `;
+    transactionsTable.appendChild(row);
+  });
+}
+
+renderReports();
+window.addEventListener('storage', renderReports);
+</script>
+
+</body>
+</html>

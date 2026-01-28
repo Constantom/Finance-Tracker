@@ -1,0 +1,46 @@
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: var(--color-primary);
+  color: white;
+  padding: 16px;
+}
+
+.sidebar h2 {
+  margin-bottom: 24px;
+}
+
+.nav a {
+  display: block;
+  color: white;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  border-radius: var(--radius-sm);
+}
+
+.nav a.active, .nav a:hover {
+  background: var(--color-primary-dark);
+}
+
+.main {
+  flex: 1;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+} 
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}

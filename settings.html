@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Settings | Finance Tracker</title>
+
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+
+  <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .welcome {
+      font-size: 14px;
+      color: var(--color-muted);
+      margin-top: 5px;
+    }
+
+    .theme-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: var(--color-accent);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .card {
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <h2>Finance Tracker</h2>
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a href="income.html">Income</a>
+      <a href="expenses.html">Expenses</a>
+      <a href="categories.html">Categories</a>
+      <a href="reports.html">Reports</a>
+      <a href="settings.html" class="active">Settings</a>
+      <a href="login.html" id="logoutBtn" style="color:var(--color-danger)">Logout</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div>
+        <h1>Settings</h1>
+        <div class="welcome" id="welcomeMsg"></div>
+      </div>
+
+      <button id="themeToggle" class="theme-btn">Toggle Dark/Light</button>
+    </header>
+
+    <section class="card">
+      <h2 class="section-title">Profile</h2>
+      <p><strong>Name:</strong> <span id="name"></span></p>
+      <p><strong>Email:</strong> <span id="email"></span></p>
+    </section>
+  </main>
+
+</div>
+
+<script src="assets/js/theme.js"></script>
+<script>
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+  if (!currentUser) {
+    window.location.href = "login.html";
+  }
+
+  // SAFELY RESOLVE USER NAME (NO BREAKS)
+  const displayName =
+    currentUser.name ||
+    currentUser.fullName ||
+    currentUser.username ||
+    "User";
+
+  document.getElementById("name").textContent = displayName;
+  document.getElementById("email").textContent = currentUser.email || "";
+  document.getElementById("welcomeMsg").textContent = `Welcome, ${displayName} 👋`;
+
+  document.getElementById("logoutBtn").onclick = e => {
+    e.preventDefault();
+    localStorage.removeItem("currentUser");
+    window.location.href = "login.html";
+  };
+</script>
+
+</body>
+</html>
